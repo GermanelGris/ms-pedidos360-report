@@ -4,28 +4,6 @@ server:
 spring:
   application:
     name: ms-pedidos360-report
-  datasource:
-    url: jdbc:mysql://${DB_HOST:localhost}:3306/pedidos360_report?createDatabaseIfNotExist=true
-    username: ${DB_USER:root}
-    password: ${DB_PASSWORD:root}
-  jpa:
-    hibernate:
-      ddl-auto: update
-    open-in-view: false
-  kafka:
-    bootstrap-servers: ${KAFKA_BOOTSTRAP:localhost:9092}
-    consumer:
-      group-id: ms-pedidos360-report
-      auto-offset-reset: earliest
-      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
-      value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
-    producer:
-      # Usado para publicar en la DLT los mensajes que fallan tras los reintentos
-      key-serializer: org.apache.kafka.common.serialization.StringSerializer
-      value-serializer: org.apache.kafka.common.serialization.StringSerializer
-
-report:
-  zone: ${REPORT_ZONE:America/Santiago}
 
 management:
   endpoints:

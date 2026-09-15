@@ -1,44 +1,28 @@
 # ms-pedidos360-report
 
-Microservicio de **reportería y KPIs** de Pedidos360. Consume el tópico de Kafka `orders.events` y construye una proyección de lectura en MySQL, **sin bloquear el core** de pedidos.
+> 🚧 **En construcción.** Fuera del alcance de la EP1: por ahora solo contiene los DTO y el controller. Los endpoints responden `501 Not Implemented`.
 
-## Endpoints (solo lectura)
+Microservicio de **reportería y KPIs** de Pedidos360: ventas por hora, lead time y estados activos.
 
-| Método | Ruta | Descripción |
+## Contenido actual
+
+| Tipo | Clase | Descripción |
 |---|---|---|
-| GET | `/api/report/kpis` | Pedidos totales, activos, ventas, lead time promedio y pedidos por estado |
-| GET | `/api/report/sales-by-hour?hours=24` | Ventas por hora (incluye horas en cero, para graficar) |
-| GET | `/api/report/top-products?limit=5` | Productos más vendidos (excluye cancelados) |
+| Controller | `controller/ReportController` | Define la API; aún sin implementación (501) |
+| DTO | `dto/ReportDtos.KpiResponse` | Pedidos totales, activos, ventas, lead time promedio y pedidos por estado |
+| DTO | `dto/ReportDtos.HourlySales` | Ventas por hora |
+| DTO | `dto/TopProduct` | Productos más vendidos |
+| DTO | `dto/OrderEventMessage` | Evento de negocio de un pedido, con el pedido y sus ítems |
 
-Swagger: `http://localhost:8084/swagger-ui.html`
+## Endpoints definidos
 
-## Kafka
+| Método | Ruta | Respuesta futura |
+|---|---|---|
+| GET | `/api/report/kpis` | `KpiResponse` |
+| GET | `/api/report/sales-by-hour?hours=24` | `List<HourlySales>` |
+| GET | `/api/report/top-products?limit=5` | `List<TopProduct>` |
 
-| Tópico | Particiones | Política | Retención |
-|---|---|---|---|
-| `orders.events` | 3 | delete | 7 días |
-| `orders.events.report.DLT` | 3 | delete | 14 días |
-
-- **Idempotencia:** los `eventId` aplicados se guardan en `processed_events`.
-- **Orden:** un evento más antiguo que el último aplicado no retrocede el estado del pedido.
-- **Errores:** se reintenta 2 veces y luego se publica en la **DLT** con el mensaje original y los metadatos del error (excepción, stacktrace, offset).
-
-## Base de datos
-
-Schema `pedidos360_report` con las tablas `order_facts`, `order_item_facts` y `processed_events`.
-
-| Variable | Por defecto |
-|---|---|
-| `DB_HOST` / `DB_USER` / `DB_PASSWORD` | `localhost` / `root` / `root` |
-| `KAFKA_BOOTSTRAP` | `localhost:9092` |
-| `REPORT_ZONE` | `America/Santiago` |
-
-## Ejecutar
-
-```bash
-./mvnw test
-./mvnw spring-boot:run
-```
+Puerto reservado: `8084`.
 
 ## Autores
 

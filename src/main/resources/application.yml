@@ -4,6 +4,46 @@ server:
 spring:
   application:
     name: ms-pedidos360-report
+  datasource:
+    # Local: MySQL en Docker (infra/local). En AWS: DB_HOST = endpoint de la RDS
+    url: jdbc:mysql://${DB_HOST:localhost}:3306/pedidos360_report?createDatabaseIfNotExist=true
+    username: ${DB_USER:root}
+    password: ${DB_PASSWORD:root}
+  jpa:
+    hibernate:
+      ddl-auto: update
+    open-in-view: false
+  rabbitmq:
+    host: ${RABBITMQ_HOST:localhost}
+    port: ${RABBITMQ_PORT:5672}
+    username: ${RABBITMQ_USER:pedidos360}
+    password: ${RABBITMQ_PASSWORD:pedidos360}
+    listener:
+      simple:
+        # ACK/NACK explícitos: el consumidor decide si confirma, reintenta o envía a la DLQ
+        acknowledge-mode: manual
+        default-requeue-rejected: false
+        prefetch: 10
+        missing-queues-fatal: false
+
+# Única fuente de nombres de RabbitMQ del microservicio: exchanges, colas, DLQ y binding key.
+pedidos360:
+  rabbitmq:
+    exchanges:
+      events: orders.events       # topic donde ms-pedidos360-orders publica los eventos de dominio
+      retry: report.retry         # recibe los mensajes que se reintentan con espera
+      dead-letter: report.dlx     # destino de los mensajes rechazados (NACK) -> DLQ
+    retry:
+      max-attempts: 3             # intentos totales ante errores recuperables (p. ej. la base no responde)
+      delay-ms: 5000              # espera entre intentos (TTL de la cola .retry)
+    orders:
+      queue: q.report.orders
+      retry-queue: q.report.orders.retry
+      dlq: q.report.orders.dlq
+      binding-key: order.*        # order.created y order.status-changed
+
+report:
+  zone: ${REPORT_ZONE:America/Santiago}
 
 management:
   endpoints:

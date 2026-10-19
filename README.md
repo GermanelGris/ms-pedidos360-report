@@ -42,6 +42,16 @@ orders ──order.*──> orders.events (topic) ──> q.report.orders ──
 
 Nunca se usa `requeue=true`. Cada envío a la DLQ queda en el log con nivel `ERROR`. Si llega un evento más antiguo que el último aplicado, no retrocede el estado del pedido.
 
+## Listener de las DLQ
+
+`messaging/DeadLetterListener` consume `q.report.orders.dlq`. Por cada mensaje muerto registra con nivel `ERROR` la cola de origen, el motivo y la cantidad de veces (header `x-death`: `rejected`, `expired` o `maxlen`), el exchange, la routing key, el `messageId` y el payload (hasta 2000 caracteres), y después confirma con ACK:
+
+```
+ERROR DeadLetterListener : DLQ [<dlq>] mensaje muerto: origen=<cola> motivo=rejected veces=1 exchange=<exchange> routingKeys=[<key>] messageId=<id> payload={...}
+```
+
+Un mensaje sin `x-death` es uno que el productor reenvió a la DLQ porque no tenía cola de destino (NO_ROUTE).
+
 ## API (solo lectura)
 
 | Método | Ruta | Respuesta |

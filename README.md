@@ -1,6 +1,6 @@
 # ms-pedidos360-report
 
-Microservicio de **reportería y KPIs** de Pedidos360: ventas por hora, productos más vendidos, lead time y pedidos por estado.
+Microservicio de **reportería y KPIs** de Pedidos360: ventas por hora, productos más vendidos, lead time, pedidos por estado y metas de venta con su avance.
 
 Se alimenta de forma **asíncrona** con los eventos de dominio que publica `ms-pedidos360-orders` en RabbitMQ. Guarda una proyección de lectura propia (schema `pedidos360_report`) y nunca consulta la base de pedidos.
 
@@ -52,13 +52,18 @@ ERROR DeadLetterListener : DLQ [<dlq>] mensaje muerto: origen=<cola> motivo=reje
 
 Un mensaje sin `x-death` es uno que el productor reenvió a la DLQ porque no tenía cola de destino (NO_ROUTE).
 
-## API (solo lectura)
+## API
 
 | Método | Ruta | Respuesta |
 |---|---|---|
 | GET | `/api/report/kpis` | Pedidos totales, activos, ventas, lead time promedio, pedidos por estado y hora del último evento |
 | GET | `/api/report/sales-by-hour?hours=24` | Ventas por hora (máximo 168 h), incluye horas sin ventas |
 | GET | `/api/report/top-products?limit=5` | Productos más vendidos, excluye pedidos cancelados |
+| GET | `/api/report/goals` | Metas de venta con lo vendido en su rango (sin cancelados) y el % de avance |
+| POST | `/api/report/goals` | `201` · crea una meta `{ "name": "Ventas de octubre", "amount": 500000, "startDate": "2026-10-01", "endDate": "2026-10-31" }`; `400` con el detalle si falta un campo o el monto no es positivo |
+| DELETE | `/api/report/goals/{id}` | `204` |
+
+Los KPIs son de solo lectura: se calculan a partir de los eventos. Las metas se guardan en el mismo schema, con el usuario que las creó (header `X-User-Name` del BFF).
 
 Desde el front se consume a través del BFF (`/api/report/**`, solo rol Admin). Swagger: `http://localhost:8084/swagger-ui.html`.
 
@@ -74,6 +79,6 @@ Puerto: `8084`.
 
 ## Autores
 
-Germán Maraboli & Camila Vera
+Germán Marabolí, Sebastián Velez & Camila Vera
 
 Proyecto Pedidos360 · DSY1107 Desarrollo Cloud Native I · Duoc UC
